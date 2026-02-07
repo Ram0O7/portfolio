@@ -68,7 +68,5 @@ export async function POST(request) {
       message: "something went wrong, try again!",
       statusCode: 500,
     });
-  } finally {
-    mongoose.connection.close();
   }
 }

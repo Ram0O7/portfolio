@@ -1,6 +1,7 @@
 import { FaGithub, FaLinkedin, FaInstagram, FaWhatsapp } from "react-icons/fa";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
 import "./globals.css";
 import { Roboto_Condensed } from "next/font/google";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -13,7 +14,7 @@ const roboto_condensed = Roboto_Condensed({
 });
 
 export const metadata = {
-  metadataBase: new URL(baseURL),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || baseURL),
   title: {
     default: "Ramkrishn Rai",
     template: `%s | Ramkrishn Rai`,
@@ -64,6 +65,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Navbar />
           <main>{children}</main>
+          <ScrollToTop />
           <Footer socials={socials} />
         </AuthProvider>
       </ThemeProvider>

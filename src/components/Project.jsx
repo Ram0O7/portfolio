@@ -5,7 +5,6 @@ import referToComponent from "@/utils/refer";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useThemeContext } from "@/context/ThemeContext";
-import { getProjects } from "@/app/blogs/fetchBolgs";
 
 const Project = () => {
   const { theme } = useThemeContext();
@@ -15,9 +14,31 @@ const Project = () => {
   const projectLoadRef = useRef(null);
 
   const getAllProjects = async () => {
-    //fetching projects dynamically from sanity
-    const projects = await getProjects();
-    setProjects([...projects]);
+    try {
+      // Fetch projects from API route (which has server-side token access)
+      const response = await fetch('/api/projects', {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to fetch projects:', response.statusText);
+        setProjects([]);
+        return;
+      }
+      
+      const result = await response.json();
+      if (result.success && result.data) {
+        setProjects([...result.data]);
+      } else {
+        console.error('Invalid response format:', result);
+        setProjects([]);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      setProjects([]);
+    }
   };
 
   useEffect(() => {
