@@ -57,8 +57,7 @@ const Navbar = () => {
             );
           })}
           {status === "authenticated" &&
-            session.user.email ===
-              ("ram706860@gmail.com" || "rairamkrishn90@gmail.com") && (
+            (session.user.email === "ram706860@gmail.com" || session.user.email === "rairamkrishn90@gmail.com") && (
               <li onClick={toggleNav}>
                 <Link
                   href="/admin"

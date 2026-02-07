@@ -32,16 +32,15 @@ export default function Profile() {
     const timer = setTimeout(() => {
       !(
         status === "authenticated" &&
-        session.user.email ===
-          ("ram706860@gmail.com" || "rairamkrishn90@gmail.com")
+        (session?.user?.email === "ram706860@gmail.com" || session?.user?.email === "rairamkrishn90@gmail.com")
       ) && router.back();
     }, 1000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [status, session, router]);
 
   if (
     status === "authenticated" &&
-    session.user.email === ("ram706860@gmail.com" || "rairamkrishn90@gmail.com")
+    (session.user.email === "ram706860@gmail.com" || session.user.email === "rairamkrishn90@gmail.com")
   ) {
     return (
       <Card>

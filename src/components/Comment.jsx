@@ -70,7 +70,7 @@ export default function Comment({ blogpost }) {
       setLoading(false);
     };
     getAllComments();
-  }, []);
+  }, [blogpost]);
 
   return (
     <div

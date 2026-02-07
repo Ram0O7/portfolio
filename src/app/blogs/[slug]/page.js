@@ -19,11 +19,11 @@ function urlFor(source) {
 
 export async function generateMetadata({ params }) {
   // read route params
-  const slug = params.slug;
+  const { slug } = await params;
 
   try {
     // fetch individual blogs pages using the slug param
-    const blog = await getBlog(slug);
+    const blog = await getBlog(slug, true);
     return {
       title: blog.title,
       description: blog.description,
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }) {
 }
 
 export async function generateStaticParams() {
-  const blogs = await getBlogs();
+  const blogs = await getBlogs(true);
   const paths = blogs.map((blog) => ({
     slug: blog.slug,
   }));
@@ -95,21 +95,22 @@ const components = {
 };
 
 export default async function Page({ params }) {
-  const blog = await getBlog(params.slug);
+  const { slug } = await params;
+  const blog = await getBlog(slug, true);
 
   return (
     <BlogWrapper>
       <BlogHeader
         title={blog.title}
         tags={blog.tags}
-        blogpost={params.slug}
+        blogpost={slug}
         content={blog.content}
         time={blog._createdAt}
-        slug={params.slug}
+        slug={slug}
       />
       <HeaderImg img={blog.image} metadata={blog.metadata} alt={blog.alt} />
       <PortableText value={blog.content} components={components} />
-      <Comment blogpost={params.slug} />
+      <Comment blogpost={slug} />
     </BlogWrapper>
   );
 }

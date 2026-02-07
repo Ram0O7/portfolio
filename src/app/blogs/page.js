@@ -8,6 +8,6 @@ export const metadata = {
 };
 
 export default async function Blog() {
-  const blogs = await getBlogs();
+  const blogs = await getBlogs(true);
   return <ShowBlogs blogs={blogs} />;
 }
