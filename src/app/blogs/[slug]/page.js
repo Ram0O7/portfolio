@@ -1,116 +1,126 @@
 import { PortableText } from "@portabletext/react";
 import imageUrlBuilder from "@sanity/image-url";
-import BlogHeader from "@/components/ui/BlogHeader";
-import HeaderImg from "@/components/ui/HeaderImg";
-import { getBlogs, getBlog } from "../fetchBolgs";
-import SyntaxHighlighter from "react-syntax-highlighter/dist/esm/default-highlight";
-import { vs2015 } from "react-syntax-highlighter/dist/esm/styles/hljs";
-import BlogWrapper from "@/components/ui/BlogWrapper";
-import config from "@/config/sanity-config";
+import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
-import CopyBtn from "@/lib/CopyBtn";
-import Comment from "@/components/Comment";
-
+import { getBlogs, getBlog } from "@/sanity/lib/content";
+import config from "@/config/sanity-config";
+import { formatDate, readingMinutes, safeUrl } from "@/lib/blog-utils";
+import CodeBlock from "@/components/CodeBlock";
+export const revalidate = 60;
+export const dynamicParams = true;
 const builder = imageUrlBuilder(config);
-function urlFor(source) {
-  return builder.image(source);
-}
-
 export async function generateMetadata({ params }) {
-  // read route params
   const { slug } = await params;
-
-  try {
-    // fetch individual blogs pages using the slug param
-    const blog = await getBlog(slug, true);
-    return {
+  const blog = await getBlog(slug);
+  if (!blog) return { title: "Article not found" };
+  return {
+    title: blog.title,
+    description: blog.description,
+    alternates: { canonical: "/blogs/" + slug },
+    openGraph: {
+      type: "article",
       title: blog.title,
       description: blog.description,
-    };
-  } catch (error) {
-    console.error(error);
-    return {
-      title: "Not Found",
-      description: "The page you are looking for does not exist.",
-    };
-  }
+      publishedTime: blog.publishedAt,
+      modifiedTime: blog._updatedAt,
+    },
+  };
 }
-
 export async function generateStaticParams() {
-  const blogs = await getBlogs(true);
-  const paths = blogs.map((blog) => ({
-    slug: blog.slug,
-  }));
-  return paths;
+  const blogs = await getBlogs();
+  return blogs.map((blog) => ({ slug: blog.slug }));
 }
-
+function Attribution({ metadata }) {
+  if (!Array.isArray(metadata) || !metadata[0]) return null;
+  return (
+    <figcaption>
+      Photo by <a href={safeUrl(metadata[1])}>{metadata[0]}</a>
+      {metadata[2] && (
+        <>
+          {" "}
+          on <a href={safeUrl(metadata[3])}>{metadata[2]}</a>
+        </>
+      )}
+    </figcaption>
+  );
+}
 const components = {
   types: {
-    code: (props) => (
-      <div className="relative my-2">
-        <SyntaxHighlighter language={props.value.language} style={vs2015}>
-          {props.value.code}
-        </SyntaxHighlighter>
-        <CopyBtn style={"absolute top-2 right-2 text-lg lg:text-xl"} />
-      </div>
-    ),
-    image: ({ value }) => (
-      <>
-        <div className="relative object-cover w-full h-72 sm:h-96 sm:w-4/5 mx-auto overflow-hidden">
-          <Image
-            src={urlFor(value.asset._ref).auto("format").fit("max").toString()}
-            alt={value.alt}
-            fill={true}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            placeholder="blur"
-            blurDataURL="/images/backgroundEffect.jpg"
-            className="object-cover rounded-sm"
+    code: ({ value }) => <CodeBlock value={value} />,
+    image: ({ value }) =>
+      value.asset ? (
+        <figure>
+          <img
+            src={builder.image(value).width(1200).auto("format").url()}
+            alt={value.alt || ""}
+            loading="lazy"
           />
-        </div>
-        <div className="attribute pt-1">
-          <p className="text-xs text-center !m-0">
-            Photo by{" "}
-            <Link
-              href={`${value.metadata[1]}/?utm_source=ramkrishn+rai&utm_medium=referral`}
-            >
-              {value.metadata[0]}
-            </Link>{" "}
-            on{" "}
-            <Link
-              href={`${value.metadata[3]}/?utm_source=ramkrishn+rai&utm_medium=referral`}
-            >
-              {value.metadata[2]}
-            </Link>
-          </p>
-        </div>
-      </>
-    ),
+          <Attribution metadata={value.metadata} />
+          {value.caption && <figcaption>{value.caption}</figcaption>}
+        </figure>
+      ) : null,
   },
+  block: { h1: ({ children }) => <h2>{children}</h2> },
   marks: {
-    link: ({ value, children }) => {
-      return <Link href={`${value?.href}`}>{children}</Link>;
-    },
+    link: ({ value, children }) => (
+      <a href={safeUrl(value?.href)}>{children}</a>
+    ),
   },
 };
-
 export default async function Page({ params }) {
   const { slug } = await params;
-  const blog = await getBlog(slug, true);
-
+  const blog = await getBlog(slug);
+  if (!blog) notFound();
   return (
-    <BlogWrapper>
-      <BlogHeader
-        title={blog.title}
-        tags={blog.tags}
-        blogpost={slug}
-        content={blog.content}
-        time={blog._createdAt}
-        slug={slug}
-      />
-      <HeaderImg img={blog.image} metadata={blog.metadata} alt={blog.alt} />
-      <PortableText value={blog.content} components={components} />
-      <Comment blogpost={slug} />
-    </BlogWrapper>
+    <article className="article-container">
+      <Link href="/blogs" className="back-link">
+        ← Back to writing
+      </Link>
+      <header className="article-header">
+        <p className="eyebrow">{(blog.tags || []).join(" / ") || "NOTES"}</p>
+        <h1>{blog.title}</h1>
+        <p className="article-deck">{blog.description}</p>
+        <div className="article-byline">
+          <span>By {blog.author}</span>
+          <span aria-hidden="true">·</span>
+          <time dateTime={blog.publishedAt}>
+            {formatDate(blog.publishedAt)}
+          </time>
+          <span aria-hidden="true">·</span>
+          <span>{readingMinutes(blog.content)} min read</span>
+        </div>
+      </header>
+      {blog.image && (
+        <figure className="article-cover">
+          <img
+            src={blog.image}
+            alt={blog.alt || ""}
+            width="1200"
+            height="675"
+          />
+          <Attribution metadata={blog.metadata} />
+        </figure>
+      )}
+      <div className="article-body">
+        <PortableText value={blog.content} components={components} />
+      </div>
+      <div className="article-end">
+        <div>
+          <p>Thanks for reading.</p>
+          <a
+            className="text-link"
+            href={
+              "mailto:ram706860@gmail.com?subject=" +
+              encodeURIComponent("Re: " + blog.title)
+            }
+          >
+            Continue the conversation ↗
+          </a>
+        </div>
+        <Link className="text-link" href="/blogs">
+          More writing →
+        </Link>
+      </div>
+    </article>
   );
 }

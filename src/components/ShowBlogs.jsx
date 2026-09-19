@@ -1,41 +1,101 @@
+"use client";
 import Link from "next/link";
-import { isoToLongDateString } from "@/lib/DateFromatted";
-import Image from "next/image";
-import readingTime from "reading-time";
-
-export default async function ShowBlogs({ blogs }) {
+import { useState } from "react";
+import { formatDate, readingMinutes } from "@/lib/blog-utils";
+export function ArticleRow({ blog }) {
   return (
-    <div className="blogs flex flex-col gap-10 sm:gap-12 py-12 max-w-3xl mx-auto">
-      {blogs.map((blog) => {
-        const stats = readingTime(blog.content || blog.description);
-        return (
-          <Link
-            href={"/blogs/" + blog.slug}
-            passHref
-            key={blog._id}
-            className="flex flex-col sm:grid grid-cols-6 justify-between items-center gap-6"
-          >
-            <div className="relative w-full h-60 sm:h-48 col-span-2">
-              <Image
-                src={`${blog.image}`}
-                alt={`${blog.alt}`}
-                fill={true}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                placeholder="blur"
-                blurDataURL="/images/backgroundEffect.jpg"
-                className="object-cover rounded-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-2 sm:gap-4 col-span-4">
-              <span className="text-xs text-text-primary">
-                {isoToLongDateString(blog._createdAt)} • {stats.minutes} min read
-              </span>
-              <h1 className="text-xl font-bold sm:text-2xl">{blog.title}</h1>
-              <p className="text-xs">{blog.description}</p>
-            </div>
-          </Link>
-        );
-      })}
-    </div>
+    <Link href={"/blogs/" + blog.slug} className="article-row">
+      <div className="article-meta">
+        <time dateTime={blog.publishedAt}>{formatDate(blog.publishedAt)}</time>
+        <span>{readingMinutes(blog.content || blog.description)} min read</span>
+      </div>
+      <div>
+        <span className="article-category">{blog.tags?.[0] || "Notes"}</span>
+        <h3>{blog.title}</h3>
+        <p>{blog.description}</p>
+      </div>
+      <span className="article-arrow" aria-hidden="true">
+        ↗
+      </span>
+    </Link>
+  );
+}
+export default function ShowBlogs({ blogs }) {
+  const [search, setSearch] = useState("");
+  const [topic, setTopic] = useState("All");
+  const topics = [
+    "All",
+    ...Array.from(
+      new Set(
+        blogs
+          .flatMap((blog) => blog.tags || [])
+          .map((tag) => tag.toLowerCase()),
+      ),
+    ).slice(0, 6),
+  ];
+  const filtered = blogs.filter(
+    (blog) =>
+      (topic === "All" ||
+        blog.tags?.some((tag) => tag.toLowerCase() === topic)) &&
+      [blog.title, blog.description, ...(blog.tags || [])]
+        .join(" ")
+        .toLowerCase()
+        .includes(search.trim().toLowerCase()),
+  );
+  return (
+    <>
+      <div className="blog-toolbar">
+        <div className="filter-list" aria-label="Filter articles by topic">
+          {topics.map((item) => (
+            <button
+              key={item}
+              aria-pressed={topic === item}
+              onClick={() => setTopic(item)}
+            >
+              {item.charAt(0).toUpperCase() + item.slice(1)}
+            </button>
+          ))}
+        </div>
+        <label>
+          <span className="sr-only">Search articles</span>
+          <input
+            type="search"
+            className="search-input"
+            value={search}
+            placeholder="Search articles…"
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </label>
+      </div>
+      <p className="results-count" aria-live="polite">
+        {filtered.length} {filtered.length === 1 ? "article" : "articles"}
+        {search && " found"}
+      </p>
+      <div className="article-list">
+        {filtered.map((blog) => (
+          <ArticleRow blog={blog} key={blog._id} />
+        ))}
+      </div>
+      {!filtered.length && (
+        <div className="empty-state">
+          <p>
+            {blogs.length
+              ? "No articles match your search."
+              : "New notes are on the way. Check back soon."}
+          </p>
+          {blogs.length > 0 && (
+            <button
+              className="text-link"
+              onClick={() => {
+                setSearch("");
+                setTopic("All");
+              }}
+            >
+              Clear filters ↗
+            </button>
+          )}
+        </div>
+      )}
+    </>
   );
 }

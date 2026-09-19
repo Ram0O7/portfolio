@@ -1,188 +1,77 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-html,
+/* Small baseline for the portfolio. Component styles live in portfolio.css. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+}
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+}
 body {
-  scroll-behavior: smooth;
+  margin: 0;
 }
-main {
-  margin-top: 4rem;
-  min-height: 100vh;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: inherit;
+  font-weight: inherit;
 }
-header,
-footer,
-main {
-  padding-inline: 5vw;
+p,
+figure,
+blockquote,
+dl,
+dd,
+pre {
+  margin: 0;
 }
-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
+a {
+  color: inherit;
+  text-decoration: inherit;
 }
-button .clipboard_check {
-  fill: rgb(155, 255, 95);
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
 }
-button .clipboard {
-  fill: rgb(95, 155, 255);
+button {
+  background: transparent;
+  text-transform: none;
 }
-
-/********** styling scrollbars based on themes **************/
-.light::-webkit-scrollbar {
-  width: 8px;
-  background-color: #eee;
+ol,
+ul,
+menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
-.light::-webkit-scrollbar-thumb {
-  background-color: #333;
+img,
+svg {
+  display: block;
+  vertical-align: middle;
 }
-.dark::-webkit-scrollbar {
-  width: 8px;
-  background-color: #111;
+img {
+  max-width: 100%;
+  height: auto;
 }
-.dark::-webkit-scrollbar-thumb {
-  background-color: #eee;
+pre,
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
-
-.theme {
-  transition: background-color 0.2s ease;
+strong,
+b {
+  font-weight: bolder;
 }
-
-.skill_slide {
-  animation: slide 20s infinite linear;
-}
-.skill_slide:hover {
-  animation-play-state: paused;
-}
-
-.commentBody {
-  min-height: 12rem;
-}
-
-.card {
-  width: min(90%, 30rem);
-}
-
-@keyframes slide {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-2465px);
-  }
-}
-.logo-animation {
-  animation: gradient_wave 5s linear infinite alternate;
-}
-
-@keyframes gradient_wave {
-  0% {
-    background-size: 10%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-  }
-  100% {
-    background-size: 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-  }
-}
-
-.profile-img {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100%;
-  opacity: 0.8;
-  overflow: hidden;
-  border-radius: 0.25rem;
-}
-
-.profile-img::before {
-  content: "";
-  position: absolute;
-  width: 100px;
-  height: 140%;
-  transform: rotate(-145deg);
-  border-radius: inherit;
-  animation: rotate 6s infinite linear;
-}
-
-@keyframes rotate {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.profile-img::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  background-color: #333;
-  border-radius: inherit;
-}
-
-.btn::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin-inline: auto;
-  width: 70%;
-  height: 2px;
-  transition: width 0.2s ease-in;
-}
-.btn:hover::after {
-  width: 100%;
-}
-
-form > div input,
-form > div textarea {
-  width: 100%;
-  outline: none;
-  padding: 1rem;
-  background: none;
-  border-bottom: 1px solid #c4c4c4;
-}
-form > div input::placeholder,
-form > div textarea::placeholder {
-  text-transform: uppercase;
-}
-
-@media (hover: none) {
-  * {
-    -webkit-tap-highlight-color: transparent;
-  }
-}
-
-@media only screen and (min-width: 768px) {
-  @keyframes slide {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-2915px);
-    }
-  }
-  header,
-  footer,
-  main {
-    padding-inline: 10vw;
-  }
-}
-
-@media only screen and (min-width: 1024px) {
-  main {
-    padding-inline: 15vw;
-  }
+[hidden] {
+  display: none;
 }

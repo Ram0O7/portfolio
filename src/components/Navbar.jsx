@@ -1,77 +1,62 @@
 "use client";
 import Link from "next/link";
-import SelectTheme from "./ui/SelectTheme";
-import { useThemeContext } from "@/context/ThemeContext";
-import { Divide as Hamburger } from "hamburger-react";
-import { useSession } from "next-auth/react";
-
-const navLinks = [
-  { name: "home", url: "/" },
-  { name: "blog", url: "/blogs" },
-  { name: "contact", url: "/#contact" },
-];
-
-const Navbar = () => {
-  const { theme, isNavOpen, toggleNav } = useThemeContext();
-  const { data: session, status } = useSession();
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+export default function Navbar() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
   return (
-    <header
-      className={`flex items-center justify-between py-1 sm:py-2 bg-${theme}-bg/60 backdrop-blur-md shadow-sm`}
-    >
-      <Link href={"/"}>
-        <span
-          className={`logo logo-animation bg-gradient-to-l from-${theme}-accent to-${theme}-secondary-accent text-3xl text-${theme}-txt sm:text-4xl lg:text-5xl font-extrabold`}
+    <header className="site-header">
+      <div className="header-inner">
+        <Link
+          href="/"
+          className="wordmark"
+          onClick={() => setOpen(false)}
+          aria-label="Ramkrishn Rai, home"
         >
-          RK
-        </span>
-      </Link>
-      <div className="sm:hidden z-50">
-        <Hamburger
-          size={25}
-          toggled={isNavOpen}
-          onToggle={toggleNav}
-          label="NavButton"
-        />
+          <span className="monogram">r.</span>
+          <span>
+            Ramkrishn Rai<span className="wordmark-dot">.</span>
+          </span>
+        </Link>
+        <button
+          className="menu-toggle"
+          aria-expanded={open}
+          aria-controls="main-navigation"
+          onClick={() => setOpen(!open)}
+        >
+          {open ? "Close −" : "Menu +"}
+        </button>
+        <nav
+          id="main-navigation"
+          aria-label="Main navigation"
+          className={open ? "navigation is-open" : "navigation"}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setOpen(false);
+          }}
+        >
+          <Link href="/#work" onClick={() => setOpen(false)}>
+            Work
+          </Link>
+          <Link href="/#about" onClick={() => setOpen(false)}>
+            About
+          </Link>
+          <Link
+            href="/blogs"
+            aria-current={pathname.startsWith("/blogs") ? "page" : undefined}
+            onClick={() => setOpen(false)}
+          >
+            Writing
+          </Link>
+          <Link
+            className="nav-contact"
+            href="/#contact"
+            onClick={() => setOpen(false)}
+          >
+            Let’s talk <span aria-hidden="true">↗</span>
+          </Link>
+        </nav>
       </div>
-      <nav
-        className={`${
-          isNavOpen ? "block w-2/3 min-h-screen" : "hidden"
-        } fixed top-0 right-0 sm:flex pt-20 sm:pt-0 bg-${theme}-bg sm:bg-transparent sm:relative sm:min-h-fit sm:w-auto items-center`}
-      >
-        <div
-          className="sm:hidden fixed top-0 left-0 w-1/3 min-h-screen bg-black/40"
-          onClick={toggleNav}
-        ></div>
-        <ul className="flex flex-col sm:flex-row items-center justify-center gap-10 sm:gap-8">
-          {navLinks.map((link) => {
-            const { name, url } = link;
-            return (
-              <li key={name} onClick={toggleNav}>
-                <Link
-                  href={url}
-                  className={`text-sm sm:text-lg hover:text-${theme}-accent font-semibold hover:underline underline-offset-2`}
-                >
-                  {name}
-                </Link>
-              </li>
-            );
-          })}
-          {status === "authenticated" &&
-            (session.user.email === "ram706860@gmail.com" || session.user.email === "rairamkrishn90@gmail.com") && (
-              <li onClick={toggleNav}>
-                <Link
-                  href="/admin"
-                  className={`text-sm sm:text-lg hover:text-${theme}-accent font-semibold hover:underline underline-offset-2`}
-                >
-                  admin
-                </Link>
-              </li>
-            )}
-          <SelectTheme />
-        </ul>
-      </nav>
     </header>
   );
-};
-
-export default Navbar;
+}

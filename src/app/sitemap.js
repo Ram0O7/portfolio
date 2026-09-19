@@ -1,21 +1,15 @@
-import { baseURL } from "../../config";
-import { getBlogs } from "./blogs/fetchBolgs";
+import { siteUrl } from "@/config/site";
+import { getBlogs } from "@/sanity/lib/content";
+export const revalidate = 60;
 export default async function sitemap() {
-  //get all blogs and get their urls
-  const blogs = await getBlogs(true);
-  const blogUrls =
-    blogs.map((blog) => {
-      return {
-        url: `${baseURL}/blogs/${blog.slug}`,
-        lastModified: blog._createdAt,
-      };
-    }) ?? [];
-
+  const origin = siteUrl;
+  const blogs = await getBlogs();
   return [
-    {
-      url: baseURL,
-      lastModified: new Date(),
-    },
-    ...blogUrls,
+    { url: origin },
+    { url: origin + "/blogs" },
+    ...blogs.map((blog) => ({
+      url: origin + "/blogs/" + blog.slug,
+      lastModified: blog._updatedAt || blog._createdAt,
+    })),
   ];
 }

@@ -1,86 +1,66 @@
-# Ramkrishn Rai - Personal Portfolio
+# Ramkrishn Rai — portfolio & writing
 
-## Description
-This is my personal portfolio website built using Next.js, Tailwind CSS, MongoDB, Redis, Sanity.io, and Express. It showcases my skills, experience, and projects as a web developer, along with providing a platform for potential clients to contact me.
+A minimal portfolio built with Next.js, React, and Sanity. The homepage includes selected projects, an about section, recent writing, and direct email contact. The writing index supports search and topic filters.
 
-## Table of Contents
-1. [Installation](#installation)
-2. [Usage](#usage)
-3. [Features](#features)
-4. [Contributing](#contributing)
-5. [Credits](#credits)
-6. [Contact](#contact)
+## Run locally
 
-## Installation
+Use Node.js 24 (the same major version used for local verification and deployment).
 
-### Prerequisites
-- Node.js and npm installed
-- MongoDB instance
-- Redis instance
-- Sanity.io account and project
+```sh
+npm ci
+npm run dev
+```
 
-### Steps
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/Ram0O7/portfolio.git
-    ```
-2. Navigate to the project directory:
-    ```sh
-    cd portfolio
-    ```
-3. Install dependencies:
-    ```sh
-    npm install
-    ```
-4. Set up environment variables:
-    - Create a `.env` file in the root directory
-    - Add the following environment variables:
-      ```env
-      MONGODB_URI=your-mongodb-uri
-      REDIS_URL=your-redis-url
-      SANITY_PROJECT_ID=your-sanity-project-id
-      SANITY_DATASET=your-sanity-dataset
-      ```
+Open http://localhost:3000. Open http://localhost:3000/admin for the writing guide, or http://localhost:3000/studio to edit content.
 
-5. Run the development server:
-    ```sh
-    npm run dev
-    ```
-6. Open your browser and navigate to `http://localhost:3000`.
+The public Sanity project defaults to `w7bwp0ru`, dataset `production`. No API token, MongoDB, or Redis is needed for the public portfolio, writing pages, or Studio login. Copy `.env.example` to `.env.local` only if you need to override those defaults; do not overwrite existing environment settings.
 
-## Usage
-- **Home Page:** Displays an introduction and my skills.
-- **Projects:** Lists my projects with descriptions and links.
-- **Contact:** Form for visitors to reach out to me.
+The backend is Sanity plus Next.js caching. Contact opens the visitor's email app. The old MongoDB/Redis comments, stored contact submissions, Airtable/email forwarding, and NextAuth visitor login have been removed. Existing hosted data is untouched. See [backend and deployment notes](docs/DEPLOYMENT.md).
 
-## Features
-- Responsive design with Tailwind CSS.
-- Dynamic content fetched from MongoDB and Sanity.io.
-- Fast and efficient data caching using Redis.
-- Server-side rendering with Next.js for improved performance.
+### Windows npm troubleshooting
 
-## Contributing
-Contributions are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create a new branch:
-    ```sh
-    git checkout -b feature/your-feature-name
-    ```
-3. Make your changes and commit them:
-    ```sh
-    git commit -m 'Add some feature'
-    ```
-4. Push to the branch:
-    ```sh
-    git push origin feature/your-feature-name
-    ```
-5. Open a pull request.
+If `npm` fails with a missing `AppData/Roaming/npm/.../npm-cli.js`, use the Node installation's CLI directly:
 
-## Credits
-- **Ramkrishn Rai:** Developer and maintainer.
-- **Technologies Used:** Next.js, Tailwind CSS, MongoDB, Redis, Sanity.io, Express.
+```powershell
+node "C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js" run dev
+```
 
-## Contact
-Feel free to get in touch with me with any query related to the project. I'll be glad to be of your service.
-- [**Email**](ram706860@gmail.com)
-- [**LinkedIn**](https://www.linkedin.com/in/ramkrishn-rai/)
+The same prefix works for `ci`, `run build`, and `run lint`. This avoids changing your system-wide npm configuration.
+
+## Write and publish
+
+See [the publishing guide](docs/PUBLISHING.md). The footer's **Studio** link opens a friendly writing desk with the same everyday instructions.
+
+- Existing `blog` documents appear under **Blog articles**.
+- Starter-schema `post` documents remain supported under **Other posts**.
+- Existing URLs and content are preserved; no migration is required.
+- **Projects** lets you update screenshots, links, technologies, descriptions, and display order.
+- Drafts are excluded from public queries. Publish to make changes public.
+- Published content is revalidated every 60 seconds on visits. The first request after expiry may receive the previous version while regeneration completes; reload afterward.
+- Newly published slugs resolve without rebuilding the website.
+- For immediate cache invalidation, optionally configure [the signed publish webhook](docs/sanity-webhook.md).
+
+## Checks
+
+```sh
+npm run lint
+npm test
+npm run build
+npm start
+```
+
+The build reads published Sanity content and needs outbound internet access. Do not publish test documents to the production dataset just to run checks.
+
+## Deploy
+
+Deploy this Next.js project to your usual host. Set `NEXT_PUBLIC_BASE_URL` to the actual portfolio origin for canonical links and the sitemap. In Sanity Manage, add that exact origin under **API → CORS origins** with credentials allowed so the embedded Studio can sign in. The Studio deploys as part of the site; a separate Studio deployment is unnecessary.
+
+The editor is the root project's `/studio` route, configured in `sanity.config.js` and `src/sanity/`. The duplicate standalone Studio has been removed from the active project.
+
+## Content and styling
+
+- `src/app/portfolio.css`: responsive design system, keyboard focus styles, reduced-motion support.
+- `src/components/`: homepage sections, navigation, project gallery, writing list.
+- `src/sanity/lib/content.js`: shared published-content queries and cache policy.
+- `src/sanity/schemaTypes/`: article, project, image, and rich-text schemas.
+- `src/app/admin/page.jsx`: author instructions; editing permissions are enforced by Sanity.

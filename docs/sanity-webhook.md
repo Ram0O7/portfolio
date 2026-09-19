@@ -1,53 +1,24 @@
-# Sanity Publish Webhook — Revalidate Next.js Cache
+# Optional: refresh immediately after publishing
 
-Use Sanity webhooks to notify your Next.js app to revalidate pages after content is published.
+The portfolio already revalidates published content every 60 seconds on visits. This optional signed webhook invalidates the content cache on a publish/unpublish/delete, so the next visit reads fresh content.
 
-1) Webhook URL (example)
+1. Generate a long random secret and save it as `SANITY_REVALIDATE_SECRET` in the deployed app's environment. Redeploy once to load the variable.
+2. Open [Sanity Manage](https://www.sanity.io/manage/project/w7bwp0ru), then **API → Webhooks → Create webhook**.
+3. Use `https://YOUR-PORTFOLIO-DOMAIN/api/revalidate` as the URL.
+4. Choose the `production` dataset; enable **Create**, **Update**, and **Delete**.
+5. Use this filter:
+   ```groq
+   _type in ["blog", "post", "project", "author", "category"] && !(_id in path("drafts.**"))
+   ```
+6. Use this projection:
+   ```groq
+   {_type}
+   ```
+7. Use **POST**, leave draft events disabled, and put the same secret in Sanity's **Secret** field. This is a webhook signing secret, not an API token.
+8. Enable the webhook.
 
-- Revalidate blog index:
+The endpoint validates the signature using `next-sanity/webhook`, expires the shared content tag, and invalidates the homepage, blog list, all article pages (including previous slugs), and sitemap. Unsupported document types receive 400; invalid signatures receive 401; missing server configuration receives 503. The old unauthenticated GET endpoint is intentionally no longer supported.
 
-  curl "https://your-site.com/api/revalidate?path=/blogs"
+Verify delivery in Sanity's webhook logs after a real authorized content update. A successful response is `{"revalidated":true}`. Do not publish disposable content to the production dataset for testing.
 
-- Revalidate a specific blog (replace `my-blog-slug`):
-
-  curl "https://your-site.com/api/revalidate?path=/blogs/my-blog-slug"
-
-2) Sanity webhook setup
-
-- In the Sanity Studio dashboard, go to Settings → API → Webhooks → Create webhook.
-- Set the trigger to `Create`, `Update`, and `Delete` for the `post` type (or your blog document type).
-- Use the Webhook URL from step (1). Example: `https://your-site.com/api/revalidate?path=/blogs`.
-
-3) Recommended: secure the webhook
-
-- Add a secret query parameter and validate it in your revalidate route.
-- Example URL: `https://your-site.com/api/revalidate?path=/blogs&secret=MY_SECRET_SECRET`
-
-- Example server-side check (pseudo):
-
-```js
-// inside /api/revalidate route
-const secret = request.nextUrl.searchParams.get('secret');
-if (secret !== process.env.REVALIDATE_SECRET) return Response.json({ revalidated: false }, { status: 401 });
-```
-
-4) Sanity webhook payload handling
-
-- Sanity sends a POST by default. You can configure the webhook to call the GET URL with query params, or set the webhook to call a small endpoint that transforms the POST into a GET call to `/api/revalidate`.
-
-5) Test locally (if exposed)
-
-- Use `ngrok` or similar to expose a local dev server, then trigger the webhook from Sanity.
-
-6) Example curl POST (Sanity -> revalidate helper)
-
-- If you want to accept POST from Sanity and revalidate a path included in the JSON payload, create a small serverless handler that extracts the slug and calls the revalidate route internally.
-
-```bash
-curl -X POST 'https://your-site.com/api/revalidate?path=/blogs/my-blog-slug'
-```
-
-Notes
-
-- Your Next.js app must be deployed (or reachable) for Sanity to call the webhook.
-- Consider adding retry / idempotency handling if your site receives many webhook calls.
+See [Sanity's signature-validation guide](https://www.sanity.io/docs/nextjs/validating-sanity-webhooks-nextjs) and [Next.js revalidateTag](https://nextjs.org/docs/app/api-reference/functions/revalidateTag).
