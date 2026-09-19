@@ -16,10 +16,10 @@
     "@sanity/icons": "^3.7.4",
     "@sanity/image-url": "^1.2.0",
     "next": "^16.3.5",
-    "next-sanity": "^11.6.12",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "sanity": "^4.22.0",
+    "next-sanity": "^13.3.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "sanity": "^6.15.0",
     "styled-components": "^6.3.12"
   },
   "devDependencies": {
@@ -30,5 +30,17 @@
   },
   "engines": {
     "node": "24.x"
+  },
+  "overrides": {
+    "@module-federation/dts-plugin": {
+      "adm-zip": "0.6.1"
+    },
+    "@vercel/frameworks": {
+      "js-yaml": "3.15.2",
+      "smol-toml": "1.8.0"
+    },
+    "typeid-js": {
+      "uuid": "11.1.1"
+    }
   }
 }

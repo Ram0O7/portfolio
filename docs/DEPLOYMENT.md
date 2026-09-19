@@ -2,16 +2,23 @@
 
 ## Release assessment — 19 September 2026
 
-The source cleanup is suitable for branch review and a preview deployment. **Do not treat this as a production security sign-off yet.** Compatible dependency updates reduced the audit findings from 32 to 9, but 4 high and 5 moderate findings remain in the Sanity dependency tree.
+The dependency advisory blocker is resolved. A fresh full `npm audit` reports **0 vulnerabilities**, including development dependencies. Sanity was upgraded from v4 to **6.15.0**, and next-sanity from v11 to **13.3.4**. Node 24 and Next.js 16 satisfy their requirements. React and React DOM are both pinned to 19.2.4 to prevent mismatched renderer versions during dependency resolution.
 
-- High: `adm-zip`, propagated through `@sanity/runtime-cli`, `@sanity/cli`, and `sanity` (four package findings for that chain).
-- Moderate: `uuid`, propagated through Sanity's UUID, preview-secret, visual-editing, and Next.js integration packages.
+Four scoped overrides in `package.json` address vulnerable transitive versions still pinned by Sanity CLI dependencies:
 
-The high-severity path concerns CLI ZIP handling; that does not by itself demonstrate an exploitable public website endpoint. It is nevertheless unresolved. npm's proposed complete remediation changes Sanity to major version 6 and next-sanity to major version 13; those migrations require their own compatibility verification. No forced major upgrades or untested dependency overrides were applied.
+| Parent package | Patched dependency |
+| --- | --- |
+| `@module-federation/dts-plugin` | `adm-zip` 0.6.1 |
+| `@vercel/frameworks` | `js-yaml` 3.15.2 and `smol-toml` 1.8.0 |
+| `typeid-js` | `uuid` 11.1.1 |
 
-References: [adm-zip advisory](https://github.com/advisories/GHSA-7q85-xj36-vmfc), [UUID advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq). Re-run `npm audit --omit=dev` before release, since advisories change.
+The UUID override stays on the CommonJS-compatible v11 line. Tests exercise TypeID generation/round trips, YAML/TOML parsing, and ZIP creation/reading through the actual parent dependency resolution. Revisit these overrides when upstream packages adopt patched versions; do not remove them without rerunning the audit and tests.
 
-Verification completed: fresh `npm ci` without the legacy-peer flag, production build, ESLint, four content tests, desktop/mobile visual checks, and HTTP checks. The removed auth/contact/comments/projects APIs return 404. The unconfigured refresh webhook fails closed with 503. A limited secret-pattern scan found no matches in versionable source, and `.env.local` plus recovery files are Git-ignored. npm still reports an upstream React peer warning from `use-sync-external-store`; installation and the checked pages succeed despite it.
+Verification: production build, ESLint, Studio schema extraction, and all seven tests passed. The build generated the existing seven blog pages. The upgrade does not migrate hosted content or change project permissions. Authenticated editing/publishing still needs a check with your own Sanity account on the updated preview before production promotion. Your earlier preview approval covered the version before this dependency upgrade.
+
+Migration references: [Sanity v4 to v5](https://www.sanity.io/docs/help/v4-to-v5), [v5 to v6](https://www.sanity.io/docs/help/v5-to-v6), and [next-sanity migration guides](https://github.com/sanity-io/next-sanity). This project does not use the custom auth-provider or SanityLive APIs affected by the breaking changes. Sanity v6 changes the default Studio search strategy; the website's content queries remain unchanged.
+
+A clean audit addresses known package advisories at the time of the check, not a guarantee against every application vulnerability. Re-run `npm audit` before release.
 
 ## What the backend does now
 
